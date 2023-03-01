@@ -1,0 +1,4 @@
+# Ignore downloaded packages
+*.deb
+*.rpm
+*.AppImage
