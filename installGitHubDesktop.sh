@@ -32,29 +32,39 @@ else
   download_url=$(curl -sL $expanded_assets_url | grep -o -E "\/shiftkey\/desktop\/releases\/download\/release-[0-9.]*-linux1\/GitHubDesktop-linux-.*-linux1\.$package_manager")
   
   filename=$(grep -o -E "GitHubDesktop-linux-[0-9.]*-linux1\.[a-zA-Z]{3,8}" <<< $download_url)
-  echo "Downloading $filename ..."
-  # TODO: add check if file is already present
-  curl -sLOJ https://github.com$download_url
-  echo "Download complete!"
   
-  read -p "Should the downloaded package be installed? (y/n)" choice
-  # TODO: add redundancy check if the package is present in the local directory
+  if [ ! -f "$(pwd)/$filename" ]; then
+    echo "Downloading $filename ..."
+    curl -sLOJ https://github.com$download_url
+    echo "Download complete!"
+  else
+    echo "$filename already exists, skipping download!"
+  fi
+
+  if [ ! -f "$(pwd)/$filename" ]; then
+    echo "$filename does not exist, check your permissions!"
+    exit 1
+  fi
   
-  case "$choice" in
-    y|Y ) :;;
-    n|N ) exit 0;;
-    * ) echo "Invalid input";;
-  esac
+  echo -n "Should the package be installed? (y/n) "
+  
+  while read choice; do
+    case "$choice" in
+      y|Y ) :;;
+      n|N ) exit 0;;
+      * ) echo -ne "Invalid input!\nPlease enter the correct input: ";;
+    esac
+  done
   
   if [ $package_manager == "deb" ]; then
     echo "Installing package, this requires sudo privileges!"
-    sudo dpkg -i ./$filename && echo "Package installed successfully"
+    sudo dpkg -i $(pwd)/$filename && echo "Package installed successfully"
   elif [ $package_manager == "rpm" ]; then
     echo "Installing package, this requires sudo privileges!"
-    sudo rpm -i ./$filename && echo "Package installed successfully"
+    sudo rpm -i $(pwd)/$filename && echo "Package installed successfully"
   else
     echo "Adding execute permissions on AppImage"
-    chmod +x ./$filename && echo "The app can now be started by execute the AppImage"
+    chmod +x $(pwd)/$filename && echo "The app can now be started by execute the AppImage"
   fi
 fi
 
