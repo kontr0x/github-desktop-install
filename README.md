@@ -1,6 +1,7 @@
-# GitHub desktop installation script
+# GitHub desktop install / update / uninstall script
 
-This script will download the most recent GitHub desktop version for your Linux and, if desired, has the ability to install it as well. 
+This script is capable to download and install the most recent GitHub desktop version for your Linux system. 
+It is also able to update and uninstall GitHub desktop. The script works with deb and rpm packages.
 If your system does not use deb or rpm packages, it will fall back to the available AppImage.
 
 ## Usage
@@ -23,11 +24,16 @@ wget https://raw.githubusercontent.com/kontr0x/github-desktop-install/main/insta
 bash ./installGitHubDesktop.sh
 ```
 
+## Optional flags
+| Flag                      | Description                                 |
+|:--------------------------|:--------------------------------------------|
+| -m (install \| uninstall) | Install or uninstall GitHub desktop.        |
+| -v                        | Enable verbose mode.                        |
+
 Tested the script on:
-- Ubuntu 22.04.2 LTS
+- Ubuntu 22.04.2 LTS, Mint 21.1
 - Fedora 37 Workstation
-- Mint 21
 
 The project came to life as a result of [berkorbay](https://gist.github.com/berkorbay)'s presumably discontinued gist page, which can be viewed [here](https://gist.github.com/berkorbay/6feda478a00b0432d13f1fc0a50467f1).
 
-The script will be updated to remove all the todos. Please feel free to contribute.
+Please feel free to contribute.
