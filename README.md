@@ -1,8 +1,8 @@
 # GitHub desktop install / update / uninstall script
 
 This script is capable to download and install the most recent GitHub desktop version for your Linux system. 
-It is also able to update and uninstall GitHub desktop. The script works with deb and rpm packages.
-If your system does not use deb or rpm packages, it will fall back to the available AppImage.
+It is also able to update and uninstall GitHub desktop. By default, the script will automatically check if an update is available.
+The script works with deb and rpm packages. If your system does not use deb or rpm packages, it will fall back to the available AppImage.
 
 ## Usage
 The installation script will be downloaded with curl and afterward executed.
