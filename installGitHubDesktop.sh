@@ -3,6 +3,7 @@
 release_url="https://github.com/shiftkey/desktop/releases/latest"
 installed=0
 installed_version="n.A."
+architecture=$(uname -m)
 mode="install"
 verbose=0
 
@@ -38,7 +39,7 @@ if [ -x "$(command -v dpkg)" ]; then
   package_manager="deb"
   if [[ $(dpkg -s "github-desktop" 2> /dev/null | grep "Status:") == "Status: install ok installed" ]]; then
     installed=1
-    installed_version=$(dpkg -s github-desktop | grep -o -E "Version: [0-9.]*-linux1" | head -n 1 | grep -o -E "[0-9.]*\.[0-9]")
+    installed_version=$(dpkg -s github-desktop | grep -o -E "Version: [0-9.]*-linux[0-9]*" | head -n 1 | grep -o -E "[0-9.]*\.[0-9]")
   fi
 elif [ -x "$(command -v rpm)" ]; then
   package_manager="rpm"
@@ -50,19 +51,30 @@ else
   package_manager="AppImage"
 fi
 
+if [[ "$architecture" == *"x86_64"* ]] && [[ "$package_manager" == *"deb"* ]]; then
+  architecture="amd64"
+fi
+
 if [ $verbose -eq 1 ]; then
+  echo "% Architecture: $architecture"
   echo "% Package manager: $package_manager"
   echo "% Installed: $installed"
 fi
 
 # Caching the source of the release page, to avoid multiple requests. Thus the script is faster.
 github_repo_release_source="$(curl -sL $release_url)"
+# Extract the link which contains the actual download links
+expanded_assets_url=$(grep -o -E "https:\/\/github.com\/shiftkey\/desktop\/releases\/expanded_assets\/release-[0-9.]*-linux[0-9]*" <<< $github_repo_release_source)
+
+if [ $verbose -eq 1 ]; then
+  echo "% Assets url: $expanded_assets_url"
+fi
 
 if [[ $installed -eq 1 ]]; then
   echo GitHub desktop is installed \($installed_version\)
 
-  if [ $mode == "install" ]; then
-    available_version=$(grep -o -E "https:\/\/github.com\/shiftkey\/desktop\/releases\/expanded_assets\/release-[0-9.]*-linux1" <<< $github_repo_release_source | grep -o -E "[0-9.]*\.[0-9]")
+  if [ $mode == "install" ]; then 
+    available_version=$(grep -o -E "[0-9.]*\.[0-9]" <<< $expanded_assets_url)
 
     installed_major_version=$(awk -F  '.' '{print $1}' <<< $installed_version)
     installed_minor_version=$(awk -F  '.' '{print $2}' <<< $installed_version)
@@ -120,15 +132,13 @@ fi
 
 printf "\n"
 
-# Extract the link which contains the actual download links
-expanded_assets_url=$(grep -o -E "https:\/\/github.com\/shiftkey\/desktop\/releases\/expanded_assets\/release-[0-9.]*-linux1" <<< $github_repo_release_source)
+download_url="/shiftkey/desktop/releases/download/$(grep -o -E "release-[0-9.]*-linux[0-9]*" <<< $expanded_assets_url)/GitHubDesktop-linux-$architecture-$(grep -o -E "[0-9.]*-linux[0-9]*" <<< $expanded_assets_url).$package_manager"
 
-download_url=$(curl -sL $expanded_assets_url | grep -o -E "\/shiftkey\/desktop\/releases\/download\/release-[0-9.]*-linux1\/GitHubDesktop-linux-.*-linux1\.$package_manager")
 if [ $verbose -eq 1 ]; then
   echo "% Download URL: $download_url"
 fi
 
-filename=$(grep -o -E "GitHubDesktop-linux-[0-9.]*-linux1\.[a-zA-Z]{3,8}" <<< $download_url)
+filename=$(grep -o -E "GitHubDesktop-linux-$architecture-[0-9.]*-linux[0-9]*\.[a-zA-Z]{3,8}" <<< $download_url)
 
 if [ ! -f "$(pwd)/$filename" ] && [ $mode == "install" ]; then
   echo "Downloading $filename ..."
@@ -141,7 +151,7 @@ elif [ $mode == "uninstall" ]; then
   echo "Have a nice day!" & exit 0
 else
   echo "$filename already exists, skipping download! Checking for integrity..."
-  checksum="$(grep -o -E "$filename.*</code>" <<< $github_repo_release_source | grep -o -E "[a-zA-Z0-9]{64}")"
+  checksum="$(curl -sL https://github.com$(curl -sL $expanded_assets_url | grep -o -E "\/shiftkey\/desktop\/releases\/download\/release-[0-9.]*-linux[0-9]*\/GitHubDesktop-linux-$architecture-.*-linux[0-9]*\.$package_manager.sha[0-9]*"))"
   checksum_file="$(sha256sum ./$filename | grep -o -E "[a-zA-Z0-9]{64}")"
 
   if [ $verbose -eq 1 ]; then
