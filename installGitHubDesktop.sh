@@ -186,9 +186,11 @@ printf "\n"
 if [ $package_manager == "deb" ]; then
   echo "Installing package, this requires sudo privileges!"
   sudo dpkg -i $(pwd)/$filename && echo "Package installed successfully"
+  rm -f $(pwd)/$filename && echo "Cleaned up the downloaded installation file."
 elif [ $package_manager == "rpm" ]; then
   echo "Installing package, this requires sudo privileges!"
   sudo rpm -i $(pwd)/$filename && echo "Package installed successfully"
+  rm -f $(pwd)/$filename && echo "Cleaned up the downloaded installation file."
 else
   echo "Adding execute permissions on AppImage"
   chmod +x $(pwd)/$filename && echo "The app can now be started by execute the AppImage"
