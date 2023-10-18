@@ -1,4 +1,5 @@
 #!/bin/bash
+script_version="1.0.0"
 
 release_url="https://github.com/shiftkey/desktop/releases/latest"
 installed=0
@@ -14,10 +15,11 @@ print_usage() {
   -h \t\t\t\t Display this help and exit \n"""
 }
 
-while getopts 'm:vh' flag; do
+while getopts 'm:vVh' flag; do
   case "${flag}" in
     m) mode="${OPTARG}" ;;
     v) verbose=1 ;;
+    V) echo "Script version:" ${script_version} & exit 0 ;;
     h|*) print_usage
        exit 1 ;;
   esac
@@ -61,10 +63,18 @@ if [ $verbose -eq 1 ]; then
   echo "% Installed: $installed"
 fi
 
+# Checking if github.com is reachable
+ping github.com -c 1 > /dev/null || (echo "Can't reach github.com" & exit 1)
+
 # Caching the source of the release page, to avoid multiple requests. Thus the script is faster.
 github_repo_release_source="$(curl -sL $release_url)"
 # Extract the link which contains the actual download links
-expanded_assets_url=$(grep -o -E "https:\/\/github.com\/shiftkey\/desktop\/releases\/expanded_assets\/release-[0-9.]*-linux[0-9]*" <<< $github_repo_release_source)
+expanded_assets_url=$(grep -o -E "https:\/\/github.com\/shiftkey\/desktop\/releases\/expanded_assets\/release-[0-9.]*-linux[0-9]*" <<< $github_repo_release_source 2> /dev/null)
+
+# Check if the script could crep the assets url
+if [ -z ${expanded_assets_url} ]; then 
+  echo "Could not get assets url" & exit 1
+fi
 
 if [ $verbose -eq 1 ]; then
   echo "% Assets url: $expanded_assets_url"
@@ -97,9 +107,9 @@ if [[ $installed -eq 1 ]]; then
       echo -ne "Do you want to update? (y/n) "
       while read choice; do
         case "$choice" in
-          y|Y ) echo "Starting update!" && break;;
-          n|N ) echo "Have a nice day!" & exit 0;;
-          * ) echo -ne "Invalid input!\nPlease enter the correct input: ";;
+          y|Y ) echo "Starting update!" && break ;;
+          n|N ) echo "Have a nice day!" & exit 0 ;;
+          * ) echo -ne "Invalid input!\nPlease enter the correct input: " ;;
         esac
       done
 
@@ -111,9 +121,9 @@ if [[ $installed -eq 1 ]]; then
   echo -ne "Uninstalling the present GitHub desktop version, do you want to continue? (y/n) "
   while read choice; do
     case "$choice" in
-      y|Y ) echo "Uninstalling GitHub desktop..." && break;;
-      n|N ) echo "Have a nice day!" & exit 0;;
-      * ) echo -ne "Invalid input!\nPlease enter the correct input: ";;
+      y|Y ) echo "Uninstalling GitHub desktop..." && break ;;
+      n|N ) echo "Have a nice day!" & exit 0 ;;
+      * ) echo -ne "Invalid input!\nPlease enter the correct input: " ;;
     esac
   done
 
@@ -151,7 +161,7 @@ elif [ $mode == "uninstall" ]; then
   echo "Have a nice day!" & exit 0
 else
   echo "$filename already exists, skipping download! Checking for integrity..."
-  checksum="$(curl -sL https://github.com$(curl -sL $expanded_assets_url | grep -o -E "\/shiftkey\/desktop\/releases\/download\/release-[0-9.]*-linux[0-9]*\/GitHubDesktop-linux-$architecture-.*-linux[0-9]*\.$package_manager.sha[0-9]*"))"
+  checksum="$(curl -sL https://github.com$(curl -sL $expanded_assets_url | grep -o -E "\/shiftkey\/desktop\/releases\/download\/release-[0-9.]*-linux[0-9]*\/GitHubDesktop-linux-$architecture-.*-linux[0-9]*\.$package_manager.sha[0-9]*" 2> /dev/null))"
   checksum_file="$(sha256sum ./$filename | grep -o -E "[a-zA-Z0-9]{64}")"
 
   if [ $verbose -eq 1 ]; then
@@ -160,8 +170,15 @@ else
   fi
 
   if [[ $checksum_file != $checksum ]];then
-    echo "Checksum mismatch! Remove the local file and restart the script!" & exit 1
-    else
+    echo -ne "Checksum mismatch! Removing the file, do you want to continue? (y/n) "
+    while read choice; do
+      case "$choice" in
+        y|Y ) (rm $(pwd)/$filename && echo "File removed, restart the script!") & exit 0 ;;
+        n|N ) echo "Please remove the local file and restart the script!" & exit 1 ;;
+        * ) echo -ne "Invalid input!\nPlease enter the correct input: " ;;
+      esac
+    done
+  else
     echo "Checksum matches!"
   fi
 
@@ -175,9 +192,9 @@ fi
 echo -ne "Should the package be installed? (y/n) "
 while read choice; do
   case "$choice" in
-    y|Y ) break;;
-    n|N ) echo "Have a nice day!" & exit 0;;
-    * ) echo -ne "Invalid input!\nPlease enter the correct input: ";;
+    y|Y ) break ;;
+    n|N ) echo "Have a nice day!" & exit 0 ;;
+    * ) echo -ne "Invalid input!\nPlease enter the correct input: " ;;
   esac
 done
 
@@ -194,4 +211,16 @@ else
   chmod +x $(pwd)/$filename && echo "The app can now be started by execute the AppImage"
 fi
 
+if [[ $package_manager != "AppImage" ]];then
+  echo -ne "Clean up downloaded file? (y/n) "
+  while read choice; do
+    case "$choice" in
+      y|Y ) (rm $(pwd)/$filename && echo "File cleaned up!") && break ;;
+      n|N ) echo "The script will not clean up any files!" && break ;;
+      * ) echo -ne "Invalid input!\nPlease enter the correct input: "  ;;
+    esac
+  done
+fi
+
+echo "Thank you for using the script, have a nice day!"
 exit 0
