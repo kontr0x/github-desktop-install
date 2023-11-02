@@ -11,7 +11,7 @@ The installation script will be downloaded with curl and afterward executed.
 | curl | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/kontr0x/github-desktop-install/main/installGitHubDesktop.sh)" `       |
 | wget | `bash -c "$(wget -O- https://raw.githubusercontent.com/kontr0x/github-desktop-install/main/installGitHubDesktop.sh)"`          |
 
-### Manuel execution
+### Manual execution
 It is always a good idea to inspect the script you are getting from the internet. 
 Please feel free to first inspect the script and execute the script manually with bash.
 ```bash
