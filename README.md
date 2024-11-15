@@ -32,6 +32,7 @@ bash ./installGitHubDesktop.sh
 
 Tested the script on:
 - Ubuntu 22.04.2 LTS, Mint 21.1
+- Ubuntu 24.04.1 LTS
 - Fedora 37 Workstation
 
 The project came to life as a result of [berkorbay](https://gist.github.com/berkorbay)'s presumably discontinued gist page, which can be viewed [here](https://gist.github.com/berkorbay/6feda478a00b0432d13f1fc0a50467f1).
